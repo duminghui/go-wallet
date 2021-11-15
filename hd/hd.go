@@ -20,26 +20,6 @@ type HD struct {
 	pathKeyMap map[string]*hdkeychain.ExtendedKey
 }
 
-func validPath(path []string) error {
-	if path[0] != "m" {
-		return ErrKeyPathFormat
-	}
-	for i := 1; i < len(path); i++ {
-		childNumStr := path[i]
-		if strings.HasSuffix(childNumStr, "'") {
-			childNumStr = strings.Replace(childNumStr, "'", "", -1)
-		}
-		childNum, err := strconv.Atoi(childNumStr)
-		if err != nil {
-			return ErrKeyPathFormat
-		}
-		if childNum >= hdkeychain.HardenedKeyStart || childNum < 0 {
-			return ErrKeyPathFormat
-		}
-	}
-	return nil
-}
-
 type purpose int
 
 const (
@@ -67,6 +47,26 @@ func (h *HD) PathNestedSegwit(account, change, addressIdx int) (*PathWrapper, er
 func (h *HD) PathNativeSegwit(account, change, addressIdx int) (*PathWrapper, error) {
 	path := fmt.Sprintf(pathTemplate, pathNativeSegwit, h.net.HDCoinType, account, change, addressIdx)
 	return h.Path(path)
+}
+
+func validPath(path []string) error {
+	if path[0] != "m" {
+		return ErrKeyPathFormat
+	}
+	for i := 1; i < len(path); i++ {
+		childNumStr := path[i]
+		if strings.HasSuffix(childNumStr, "'") {
+			childNumStr = strings.Replace(childNumStr, "'", "", -1)
+		}
+		childNum, err := strconv.Atoi(childNumStr)
+		if err != nil {
+			return ErrKeyPathFormat
+		}
+		if childNum >= hdkeychain.HardenedKeyStart || childNum < 0 {
+			return ErrKeyPathFormat
+		}
+	}
+	return nil
 }
 
 // Path create path info
