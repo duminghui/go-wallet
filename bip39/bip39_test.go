@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -24,31 +25,35 @@ func TestNewEntropy(t *testing.T) {
 }
 
 func TestNewMnemonic(t *testing.T) {
-	bytes, err := NewEntropy(128)
-	if err != nil {
-		fmt.Println(err)
-		return
+	bitSizeSlice := []int{
+		128, 160, 192, 224, 256,
 	}
-	mnemonic, err := NewMnemonic(bytes)
-	if err != nil {
-		fmt.Println(err)
-		return
+	for _, bitSize := range bitSizeSlice {
+		bytes, err := NewEntropy(bitSize)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		mnemonic, err := NewMnemonic(bytes)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("mnemonic:", mnemonic, len(strings.Split(mnemonic, " ")))
 	}
-	fmt.Println("mnemonic:", mnemonic)
 }
 
 func TestNewSeed(t *testing.T) {
 	entropy, _ := NewEntropy(256)
 	fmt.Printf("entropy:%x\n", entropy)
 	mnemonic, _ := NewMnemonic(entropy)
-	fmt.Println("mnemonic:", mnemonic)
+	fmt.Println("mnemonic:", mnemonic, len(strings.Split(mnemonic, " ")))
 	seed := NewSeed(mnemonic, "11111")
 	fmt.Printf("seed:%x\n", seed)
 }
 
 func TestIsMnemonic(t *testing.T) {
-	t.SkipNow()
-	isMnemonic := IsMnemonicValid("orient neutral catch matrix reopen fine victory faculty jar clever fold agent stage beyond ride sudden answer maze exercise confirm dentist people shift")
+	isMnemonic := IsMnemonicValid("tail reason eagle piece shrimp before annual creek exact insect carry police special rival promote lounge clever click slab toward bridge")
 	fmt.Println(isMnemonic)
 }
 
