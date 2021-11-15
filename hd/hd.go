@@ -74,11 +74,11 @@ func (h *HD) PathNativeSegwit(account, change, addressIdx int) (*PathWrapper, er
 func (h *HD) Path(path string) (*PathWrapper, error) {
 	cKey, ok := h.pathKeyMap[path]
 	if ok {
-		return &PathWrapper{
-			path: path,
-			key:  cKey,
-			net:  h.net,
-		}, nil
+		pathWrapper, err := NewPathWrapper(path, cKey, h.net)
+		if err != nil {
+			return nil, err
+		}
+		return pathWrapper, nil
 	}
 	pathSlice := strings.Split(path, "/")
 	err := validPath(pathSlice)
@@ -117,11 +117,11 @@ func (h *HD) Path(path string) (*PathWrapper, error) {
 		}
 		tmpParentKey = cKey
 	}
-	return &PathWrapper{
-		path: path,
-		key:  cKey,
-		net:  h.net,
-	}, nil
+	pathWrapper, err := NewPathWrapper(path, cKey, h.net)
+	if err != nil {
+		return nil, err
+	}
+	return pathWrapper, nil
 }
 
 func NewWalletFromMnemonic(mnemonic, passwd string, net *chaincfg.Params) (*HD, error) {
@@ -139,10 +139,24 @@ func NewWalletFromMnemonic(mnemonic, passwd string, net *chaincfg.Params) (*HD, 
 }
 
 type PathWrapper struct {
-	path        string
-	pathPurpose purpose
-	key         *hdkeychain.ExtendedKey
-	net         *chaincfg.Params
+	path string
+	key  *hdkeychain.ExtendedKey
+	net  *chaincfg.Params
+	eth  *Eth
+}
+
+func NewPathWrapper(path string, key *hdkeychain.ExtendedKey, net *chaincfg.Params) (*PathWrapper, error) {
+	privKey, err := key.ECPrivKey()
+	if err != nil {
+		return nil, err
+	}
+	eth := NewEth(privKey)
+	return &PathWrapper{
+		path: path,
+		key:  key,
+		net:  net,
+		eth:  eth,
+	}, nil
 }
 
 func (p *PathWrapper) ExtendedPubKey() (string, error) {
@@ -215,18 +229,10 @@ func (p *PathWrapper) AddressNestedSegwit() (string, error) {
 	return addr.EncodeAddress(), nil
 }
 
-func (p *PathWrapper) EthAddress() (string, error) {
-	pubKey, err := p.key.ECPubKey()
-	if err != nil {
-		return "", err
-	}
-	return EthEncodeAddress(pubKey), nil
+func (p *PathWrapper) EthAddress() string {
+	return p.eth.EthEncodeAddress()
 }
 
-func (p *PathWrapper) EthImportablePrivKey() (string, error) {
-	ecPrivKey, err := p.key.ECPrivKey()
-	if err != nil {
-		return "", err
-	}
-	return EthPrivKeyImportable(ecPrivKey), nil
+func (p *PathWrapper) EthImportablePrivKey() string {
+	return p.eth.EthPrivKeyImportable()
 }

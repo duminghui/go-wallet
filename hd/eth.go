@@ -3,20 +3,31 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/duminghui/go-wallet/ec"
 	"golang.org/x/crypto/sha3"
 )
 
 const (
-	HashLength = 32
+	EthHashLength = 32
 )
 
 type (
-	Hash [HashLength]byte
+	EthHash [EthHashLength]byte
 )
 
-func Keccak256Hash(data ...[]byte) (h Hash) {
+type Eth struct {
+	privKey *ec.PrivateKey
+}
+
+func NewEth(privKey *ec.PrivateKey) *Eth {
+	return &Eth{
+		privKey: privKey,
+	}
+}
+
+func (e *Eth) keccak256Hash(data ...[]byte) (h EthHash) {
 	d := sha3.NewLegacyKeccak256()
 	for _, b := range data {
 		d.Write(b)
@@ -25,17 +36,35 @@ func Keccak256Hash(data ...[]byte) (h Hash) {
 	return h
 }
 
-func EthPrivKeyImportable(privKey *ec.PrivateKey) string {
-	return hex.EncodeToString(privKey.Serialize())
+func (e *Eth) EthPrivKeyImportable() string {
+	return hex.EncodeToString(e.privKey.Serialize())
 }
 
-// https://www.codenong.com/cs106540552/
-func EthEncodeAddress(pubKey *ec.PublicKey) string {
-	keccak256Hash := Keccak256Hash(pubKey.SerializeUncompressed()[1:])
-	//addressHash := keccak256Hash[12:]
-	//checksum := Keccak256Hash(addressHash)
-	//hashCheckSum := hex.EncodeToString(checksum[:])
-	h := hex.EncodeToString(keccak256Hash[12:])
+func (e *Eth) ChecksumAddress(addr string) string {
+	addrL := strings.ToLower(addr)
+	if strings.HasSuffix(addrL, "0x") {
+		addrL = addrL[2:]
+		addr = addr[2:]
+	}
+	var binaryStr string
+	addrBytes := []byte(addrL)
+	hash256 := e.keccak256Hash(addrBytes)
+	for i, l := range addrL {
+		if l >= '0' && l <= '9' {
+			continue
+		} else {
+			binaryStr = fmt.Sprintf("%08b", hash256[i/2])
+			if binaryStr[4*(i%2)] == '1' {
+				addrBytes[i] -= 32
+			}
+		}
+	}
+	return "0x" + string(addrBytes)
+}
 
-	return fmt.Sprintf("0x%s", h)
+func (e *Eth) EthEncodeAddress() string {
+	pubKey := e.privKey.PubKey()
+	keccak256Hash := e.keccak256Hash(pubKey.SerializeUncompressed()[1:])
+	h := hex.EncodeToString(keccak256Hash[12:])
+	return e.ChecksumAddress(h)
 }

@@ -16,7 +16,8 @@ func TestEthPrivKeyImportable(t *testing.T) {
 		return
 	}
 	privKey, _ := ec.PrivKeyFromBytes(ec.S256(), byteSlice)
-	testPrivKeyStr := EthPrivKeyImportable(privKey)
+	eth := NewEth(privKey)
+	testPrivKeyStr := eth.EthPrivKeyImportable()
 	fmt.Println(testPrivKeyStr == privKeyStr)
 }
 
@@ -29,7 +30,9 @@ func TestEthEncodeAddress(t *testing.T) {
 		return
 	}
 	privKey, _ := ec.PrivKeyFromBytes(ec.S256(), byteSlice)
-	testAddr := EthEncodeAddress(privKey.PubKey())
+	eth := NewEth(privKey)
+
+	testAddr := eth.EthEncodeAddress()
 	fmt.Println(testAddr)
 	fmt.Println(targetAddr == testAddr)
 

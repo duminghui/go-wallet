@@ -2,7 +2,6 @@ package hd
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/duminghui/go-wallet/d/chaincfg"
@@ -75,19 +74,14 @@ func TestPathWrapper_EthAddress(t *testing.T) {
 		fmt.Println(2, err)
 		return
 	}
-	ethAddr, err := pi.EthAddress()
-	if err != nil {
-		fmt.Println(3, err)
-		return
-	}
-	targetAddr := strings.ToLower("0xd124Aa9c2EcaB77939211f03A0926cF47367D6e1")
+	ethAddr := pi.EthAddress()
+
+	targetAddr := "0xd124Aa9c2EcaB77939211f03A0926cF47367D6e1"
+
 	fmt.Println(ethAddr, targetAddr == ethAddr)
 
-	privKey, err := pi.EthImportablePrivKey()
-	if err != nil {
-		fmt.Println(4, err)
-		return
-	}
+	privKey := pi.EthImportablePrivKey()
+
 	targetPrivKey := "18b59bc5d18aac1041974e6ffe21ddbee0d307df0acc126ecf47d06309638c33"
 	fmt.Println(privKey, targetPrivKey == privKey)
 
