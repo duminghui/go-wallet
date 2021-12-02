@@ -40,6 +40,8 @@ func TestNewMnemonic(t *testing.T) {
 			return
 		}
 		fmt.Println("mnemonic:", mnemonic, len(strings.Split(mnemonic, " ")))
+		seed := NewSeed(mnemonic, "")
+		fmt.Println(len(seed))
 	}
 }
 
